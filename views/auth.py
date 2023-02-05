@@ -62,10 +62,8 @@ def generate_tokens(email, password, is_refresh=False):
     генерирует токен для пользователя по паролю или refresh-токену.
     в токен записывается имя пользователя и роль
     """
-    users = db.session.query(User).filter(User.email == email)
-    if users is not None:
-        print(users)
-        user = users[0]# получаем пользователя по имени из БД
+    user = db.session.query(User).filter(User.email == email).first()
+
     if user is None:
         raise abort(404)
 
