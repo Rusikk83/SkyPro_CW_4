@@ -23,7 +23,7 @@ class UsersView(Resource):
 
 @user_ns.route('/<int:uid>')
 class UserView(Resource):
-    @auth_admin
+    @auth_required
     def get(self, uid):
         u = db.session.query(User).get(uid)
         sm_d = UserSchema().dump(u)

@@ -12,7 +12,7 @@ director_ns = Namespace('directors')
 """представление для реализации методов CRUD для модели режиссер"""
 @director_ns.route('/')
 class DirectorsView(Resource):
-    @auth_required
+    #@auth_required
     def get(self):
         rs = db.session.query(Director).all()
         res = DirectorSchema(many=True).dump(rs)
@@ -30,9 +30,9 @@ class DirectorsView(Resource):
 
 
 
-@director_ns.route('/<int:rid>')
+@director_ns.route('/<int:rid>/')
 class DirectorView(Resource):
-    @auth_required
+    #@auth_required
     def get(self, rid):
         r = db.session.query(Director).get(rid)
         sm_d = DirectorSchema().dump(r)

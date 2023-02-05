@@ -1,5 +1,6 @@
 from flask import request
 from flask_restx import Resource, Namespace
+from sqlalchemy import desc
 
 from models import Movie, MovieSchema
 from setup_db import db
@@ -12,20 +13,25 @@ movie_ns = Namespace('movies')
 """представление для реализации методов CRUD для модели фильмы"""
 @movie_ns.route('/')
 class MoviesView(Resource):
-    @auth_required
+    #@auth_required
     def get(self):
-        director = request.args.get("director_id")
-        genre = request.args.get("genre_id")
+        status = request.args.get("status")
+        page = request.args.get("page")
         year = request.args.get("year")
         t = db.session.query(Movie)
-        if director is not None:
-            t = t.filter(Movie.director_id == director)
-        if genre is not None:
-            t = t.filter(Movie.genre_id == genre)
-        if year is not None:
-            t = t.filter(Movie.year == year)
-        all_movies = t.all()
-        res = MovieSchema(many=True).dump(all_movies)
+        movies = None
+
+        if status is not None:
+            if status.lower() == 'new':
+                if page is not None:
+                    movies = t.order_by(desc(Movie.year)).limit(12).offset(page)
+                else:
+                    movies = t.order_by(desc(Movie.year))
+        elif page is not None:
+            movies = t.limit(12).offset(page)
+        else:
+            movies = t.all()
+        res = MovieSchema(many=True).dump(movies)
         return res, 200
 
     @auth_admin
@@ -40,7 +46,7 @@ class MoviesView(Resource):
 
 @movie_ns.route('/<int:bid>')
 class MovieView(Resource):
-    @auth_admin
+    #@auth_admin
     def get(self, bid):
         b = db.session.query(Movie).get(bid)
         sm_d = MovieSchema().dump(b)

@@ -1,5 +1,6 @@
 from flask import Flask
 from flask_restx import Api
+from flask_cors import CORS
 
 from config import Config
 from models import User
@@ -8,7 +9,7 @@ from views.directors import director_ns
 from views.genres import genre_ns
 from views.movies import movie_ns
 from views.users import user_ns
-from views.auth import  auth_ns
+from views.auth import auth_ns
 
 
 def create_app(config_object):
@@ -21,13 +22,16 @@ def create_app(config_object):
 def create_data(app, db):
     """Использется для первоначального создания пользователей в БД"""
     with app.app_context():
+
+
+
         db.create_all()
 
-        u1 = User(username="vasya", password="my_little_pony", role="user")
+        u1 = User(email="vasya", password="my_little_pony", role="user")
         u1.password = u1.get_hash()
-        u2 = User(username="oleg", password="qwerty", role="user")
+        u2 = User(email="oleg", password="qwerty", role="user")
         u2.password = u2.get_hash()
-        u3 = User(username="oleg_2", password="P@ssw0rd", role="admin")
+        u3 = User(email="oleg_2", password="P@ssw0rd", role="admin")
         u3.password = u3.get_hash()
 
         with db.session.begin():
@@ -35,8 +39,9 @@ def create_data(app, db):
 
 
 def register_extensions(app):
+    cors.init_app(app)
     db.init_app(app)
-    api = Api(app)
+    api.init_app(app)
 
     # подключаем неймспейсы
     api.add_namespace(director_ns)
@@ -45,11 +50,13 @@ def register_extensions(app):
     api.add_namespace(user_ns)
     api.add_namespace((auth_ns))
 
-   # create_data(app, db)
+    #create_data(app, db)
 
 
+cors = CORS()
+api = Api(doc='/docs')
 app = create_app(Config())
 app.debug = True
 
 if __name__ == '__main__':
-    app.run(host="localhost", port=10001, debug=True)
+    app.run(host="localhost", port=5000, debug=True)

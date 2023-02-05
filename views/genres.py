@@ -11,7 +11,7 @@ genre_ns = Namespace('genres')
 """представление для реализации методов CRUD для модели жанры"""
 @genre_ns.route('/')
 class GenresView(Resource):
-    @auth_required
+    #@auth_required
     def get(self):
         rs = db.session.query(Genre).all()
         res = GenreSchema(many=True).dump(rs)
@@ -27,9 +27,9 @@ class GenresView(Resource):
         return "", 201, {"location": f"/movies/{new_genre.id}"}
 
 
-@genre_ns.route('/<int:gid>')
+@genre_ns.route('/<int:gid>/')
 class GenreView(Resource):
-    @auth_required
+    #@auth_required
     def get(self, gid):
         r = db.session.query(Genre).get(gid)
         sm_d = GenreSchema().dump(r)
