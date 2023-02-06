@@ -23,8 +23,6 @@ def create_data(app, db):
     """Использется для первоначального создания пользователей в БД"""
     with app.app_context():
 
-
-
         db.create_all()
 
         u1 = User(email="vasya", password="my_little_pony", role="user")
@@ -50,7 +48,7 @@ def register_extensions(app):
     api.add_namespace(user_ns)
     api.add_namespace((auth_ns))
 
-    #create_data(app, db)
+    #create_data(app, db)  # если надо заполнить данные пользователей
 
 
 cors = CORS()

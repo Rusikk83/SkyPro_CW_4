@@ -5,7 +5,6 @@ from sqlalchemy import desc
 from models import Movie, MovieSchema
 from setup_db import db
 
-from views.auth import auth_required, auth_admin
 
 movie_ns = Namespace('movies')
 
