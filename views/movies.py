@@ -10,10 +10,9 @@ from views.auth import auth_required, auth_admin
 movie_ns = Namespace('movies')
 
 
-"""представление для реализации методов CRUD для модели фильмы"""
+"""представление для получения списков фильмов"""
 @movie_ns.route('/')
 class MoviesView(Resource):
-    #@auth_required
     def get(self):
         # получаем парметры status и page из запроса
         status = request.args.get("status")
@@ -38,7 +37,6 @@ class MoviesView(Resource):
 
 @movie_ns.route('/<int:id>/')
 class MovieView(Resource):
-    #@auth_admin
     def get(self, id):
         b = db.session.query(Movie).get(id)
         sm_d = MovieSchema().dump(b)
