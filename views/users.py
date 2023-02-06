@@ -1,5 +1,7 @@
+import hashlib
+
 from flask import request
-from flask_restx import Resource, Namespace
+from flask_restx import Resource, Namespace, abort
 
 from models import User, UserSchema
 from setup_db import db
@@ -33,10 +35,28 @@ class UsersView(Resource):
         return "", 201
 
 
+@user_ns.route('/password/')
+class UserChangePassword(Resource):
+    @auth_required
+    def put(self, email):
+        user = db.session.query(User).filter(User.email == email).first()
+        req_json = request.json
+        old_password = req_json.get("old_password")
+        new_password = req_json.get("new_password")
+        if hashlib.md5(old_password.encode('utf-8')).hexdigest() != user.password:
+            abort(401)
+        else:
+            user.password = hashlib.md5(new_password.encode('utf-8')).hexdigest()
+            db.session.add(user)
+            db.session.commit()
+            return "", 201
+
+
+
 @user_ns.route('/<int:uid>')
 class UserView(Resource):
-    @auth_required
-    def get(self, uid, email):
+    #@auth_required
+    def get(self, uid):
         u = db.session.query(User).get(uid)
         sm_d = UserSchema().dump(u)
         return sm_d, 200
