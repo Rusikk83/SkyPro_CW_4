@@ -14,9 +14,15 @@ director_ns = Namespace('directors')
 class DirectorsView(Resource):
     #@auth_required
     def get(self):
-        rs = db.session.query(Director).all()
-        res = DirectorSchema(many=True).dump(rs)
-        return res, 200
+        page = request.args.get('page')
+        if page is None:
+            rs = db.session.query(Director).all()
+            res = DirectorSchema(many=True).dump(rs)
+            return res, 200
+        else:
+            rs = db.session.query(Director).limit(12).offset(page)
+            res = DirectorSchema(many=True).dump(rs)
+            return res, 200
 
     @auth_admin
     def post(self):

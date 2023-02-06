@@ -13,9 +13,17 @@ genre_ns = Namespace('genres')
 class GenresView(Resource):
     #@auth_required
     def get(self):
-        rs = db.session.query(Genre).all()
-        res = GenreSchema(many=True).dump(rs)
-        return res, 200
+        page = request.args.get("page")
+        if page is None:
+            rs = db.session.query(Genre).all()
+            res = GenreSchema(many=True).dump(rs)
+            return res, 200
+
+        else:
+            rs = db.session.query(Genre).limit(12).offset(page)
+            res = GenreSchema(many=True).dump(rs)
+            return res, 200
+
 
     @auth_admin
     def post(self):
