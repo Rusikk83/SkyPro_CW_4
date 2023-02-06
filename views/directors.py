@@ -9,33 +9,23 @@ from views.auth import auth_required, auth_admin
 director_ns = Namespace('directors')
 
 
-"""представление для реализации методов CRUD для модели режиссер"""
+"""представление для получения списка всех режиссеров"""
 @director_ns.route('/')
 class DirectorsView(Resource):
     #@auth_required
     def get(self):
         page = request.args.get('page')
-        if page is None:
+        if page is None:  # если НЕ задан параметр page
             rs = db.session.query(Director).all()
             res = DirectorSchema(many=True).dump(rs)
             return res, 200
         else:
-            rs = db.session.query(Director).limit(12).offset(page)
+            rs = db.session.query(Director).limit(12).offset((int(page)-1)*12)  # постраничный вывод данных
             res = DirectorSchema(many=True).dump(rs)
             return res, 200
 
-    @auth_admin
-    def post(self):
-        req_json = request.json
-        new_director = Director(**req_json)
 
-        db.session.add(new_director)
-        db.session.commit()
-        return "", 201, {"location": f"/movies/{new_director.id}"}
-
-
-
-
+"""представление для получения режиссера по ID """
 @director_ns.route('/<int:rid>/')
 class DirectorView(Resource):
     #@auth_required
@@ -44,18 +34,3 @@ class DirectorView(Resource):
         sm_d = DirectorSchema().dump(r)
         return sm_d, 200
 
-    @auth_admin
-    def put(self, rid):
-        director = db.session.query(Director).get(rid)
-        req_json = request.json
-        director.name = req_json.get("name")
-
-        db.session.add(director)
-        db.session.commit()
-        return "", 204
-    @auth_admin
-    def delete(self, rid):
-        director = db.session.query(Director).get(rid)
-        db.session.add(director)
-        db.session.commit()
-        return "", 204

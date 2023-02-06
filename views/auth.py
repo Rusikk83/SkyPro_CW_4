@@ -14,7 +14,7 @@ auth_ns = Namespace('auth')
 
 
 def auth_required(func):
-    """Декоратор проверки авторизации пользователя"""
+    """Декоратор проверки авторизации пользователя по токену, передает email из токена в функцию"""
 
     def wrapper(*args, **kwargs):
         if 'Authorization' not in request.headers:  # проверем наличие заголовка с данными авторизации
@@ -36,7 +36,7 @@ def auth_required(func):
 
 
 def auth_admin(func):
-    """Декоратор проверки авторизации и прав пользователя"""
+    """Декоратор проверки авторизации и роли пользователя"""
 
     def wrapper(*args, **kwargs):
         if 'Authorization' not in request.headers:  # проверем наличие заголовка с данными авторизации
@@ -67,7 +67,7 @@ def generate_tokens(email, password, is_refresh=False):
     """
     user = db.session.query(User).filter(User.email == email).first()
 
-    if user is None:
+    if user is None:  # если пользователь с даным email не найден
         raise abort(404)
 
     if not is_refresh:  # если по паролю, а не по рефреш-токену
@@ -107,9 +107,11 @@ def approve_refresh_token(refresh_token):
         raise abort(400)
 
 
+"""регистрация нового пользователя при получении имени и пароля"""
+
+
 @auth_ns.route('/register/')
 class AuthViewReg(Resource):
-    """регистрация нового пользователя при получении имени и пароля"""
     def post(self):
         data = request.json
 
@@ -127,54 +129,29 @@ class AuthViewReg(Resource):
         return "", 201, {"location": f"/users/{new_user.id}"}
 
 
+"""получение токена для зарегистрированного пользователя по логину и паролю или по рефреш токену"""
+
+
 @auth_ns.route('/login/')
 class AuthViewLog(Resource):
     def post(self):
+        """получение токенов авторизации по логину и паролю"""
         data = request.json  # получение имени пользователя и пароля из запроса
         email = data.get("email", None)
         password = data.get("password", None)
 
-        if None in [email, password]:
+        if None in [email, password]:  # если пароль или email не заданы
             return "", 400
 
         tokens = generate_tokens(email, password)  # получение токеноа по логину и паролю
         return tokens, 201
 
-
     def put(self):
         """обновление токенов авторизации по рефреш-токену"""
         data = request.json
         # получение рефреш-токена из запроса
         token = data.get("refresh_token")
 
-        tokens = approve_refresh_token(token)  #получение токенов по рефреш-токену
+        tokens = approve_refresh_token(token)  # получение токенов по рефреш-токену
 
         return tokens, 201
-
-
-'''представление для получения токенов авторизации
-@auth_ns.route('/')
-class AuthView(Resource):
-    """получение токенов авторизации по логину и паролю"""
-    def post(self):
-        data = request.json
-        # получение имени пользователя и пароля из запроса
-        username = data.get("username", None)
-        password = data.get("password", None)
-
-        if None in [username, password]:
-            return "", 400
-
-        tokens = generate_tokens(username, password)  # получение токеноа по логину и паролю
-        return tokens, 201
-
-    def put(self):
-        """обновление токенов авторизации по рефреш-токену"""
-        data = request.json
-        # получение рефреш-токена из запроса
-        token = data.get("refresh_token")
-
-        tokens = approve_refresh_token(token)  #получение токенов по рефреш-токену
-
-        return tokens, 201'''
-

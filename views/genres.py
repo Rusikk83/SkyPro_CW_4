@@ -8,33 +8,24 @@ from views.auth import auth_required, auth_admin
 genre_ns = Namespace('genres')
 
 
-"""представление для реализации методов CRUD для модели жанры"""
+"""представление для списка жанров жанры"""
 @genre_ns.route('/')
 class GenresView(Resource):
     #@auth_required
     def get(self):
         page = request.args.get("page")
-        if page is None:
+        if page is None:  # если page не задан, получаем все жанры
             rs = db.session.query(Genre).all()
             res = GenreSchema(many=True).dump(rs)
             return res, 200
 
-        else:
-            rs = db.session.query(Genre).limit(12).offset(page)
+        else:  # если задан page то выводится заданная страница
+            rs = db.session.query(Genre).limit(12).offset((int(page)-1)*12)
             res = GenreSchema(many=True).dump(rs)
             return res, 200
 
 
-    @auth_admin
-    def post(self):
-        req_json = request.json
-        new_genre = Genre(**req_json)
-
-        db.session.add(new_genre)
-        db.session.commit()
-        return "", 201, {"location": f"/movies/{new_genre.id}"}
-
-
+"""представление для получения жанра по id"""
 @genre_ns.route('/<int:gid>/')
 class GenreView(Resource):
     #@auth_required
@@ -43,19 +34,3 @@ class GenreView(Resource):
         sm_d = GenreSchema().dump(r)
         return sm_d, 200
 
-    @auth_admin
-    def put(self, gid):
-        genre = db.session.query(Genre).get(gid)
-        req_json = request.json
-        genre.name = req_json.get("name")
-
-        db.session.add(genre)
-        db.session.commit()
-        return "", 204
-
-    @auth_admin
-    def delete(self, gid):
-        genre = db.session.query(Genre).get(gid)
-        db.session.add(genre)
-        db.session.commit()
-        return "", 204
