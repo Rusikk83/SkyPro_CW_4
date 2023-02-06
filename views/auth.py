@@ -23,11 +23,14 @@ def auth_required(func):
         data = request.headers['Authorization']  # получаем значение заголовка авторизации
         token = data.split("Bearer ")[-1]  # выделяем сам токен из строки авторизации
         try:
-            jwt.decode(token, Config.SECRET_HERE, algorithms=['HS256'])  # декодируем токен авторизации
+            user = jwt.decode(token, Config.SECRET_HERE, algorithms=['HS256'])  # декодируем токен авторизации
+
         except Exception:  # если токен не валиден, возвращаем ответ 401
             abort(401)
 
-        return func(*args, **kwargs)  # если исключение не вызвалось, выполняем декорируемую функцию
+        email = user.get('email')
+
+        return func(*args, **kwargs, email=email)  # если исключение не вызвалось, выполняем декорируемую функцию
 
     return wrapper
 
@@ -72,7 +75,7 @@ def generate_tokens(email, password, is_refresh=False):
             raise abort(400)
 
     data = {
-        "username": user.email,
+        "email": user.email,
         "role": user.role,
     }
 
@@ -97,8 +100,8 @@ def approve_refresh_token(refresh_token):
         data = jwt.decode(jwt=refresh_token, key=Config.SECRET_HERE,
                           algorithms=['HS256'])  # декодирование рефреш-токена
 
-        username = data.get("username")  # получение имени пользователя из токена
-        return generate_tokens(username, None, is_refresh=True)  # получение новой пары токенов
+        email = data.get("email")  # получение имени пользователя из токена
+        return generate_tokens(email, None, is_refresh=True)  # получение новой пары токенов
 
     except Exception:  # если то рефреш-токен не валиден вызываем исключение
         raise abort(400)

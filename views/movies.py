@@ -44,7 +44,7 @@ class MoviesView(Resource):
         return "", 201, {"location": f"/movies/{ent.id}"}
 
 
-@movie_ns.route('/<int:bid>')
+@movie_ns.route('/<int:bid>/')
 class MovieView(Resource):
     #@auth_admin
     def get(self, bid):

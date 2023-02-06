@@ -6,25 +6,37 @@ from setup_db import db
 
 from views.auth import auth_required, auth_admin
 
-user_ns = Namespace('users')
+user_ns = Namespace('user')
 
 """представление для реализации методов CRUD для модели пользователь"""
 @user_ns.route('/')
 class UsersView(Resource):
-    def post(self):
-        req_json = request.json
-        new_user = User(**req_json)
-        new_user.password = new_user.get_hash()
+    @auth_required
+    def get(self, email):
+        u = db.session.query(User).filter(User.email == email).first()
+        sm_d = UserSchema().dump(u)
 
-        db.session.add(new_user)
+        return sm_d, 200
+
+    @auth_required
+    def patch(self, email):
+        user = db.session.query(User).filter(User.email == email).first()
+        req_json = request.json
+        user.email = req_json.get("surname")  # перепутано специально, т.к. это ошибка нп фронте
+        user.name = req_json.get("name")
+        user.surname = req_json.get("email")
+        user.favorite_genre = req_json.get("favourite_genre")
+
+
+        db.session.add(user)
         db.session.commit()
-        return "", 201, {"location": f"/users/{new_user.id}"}
+        return "", 201
 
 
 @user_ns.route('/<int:uid>')
 class UserView(Resource):
     @auth_required
-    def get(self, uid):
+    def get(self, uid, email):
         u = db.session.query(User).get(uid)
         sm_d = UserSchema().dump(u)
         return sm_d, 200
